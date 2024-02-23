@@ -54,7 +54,7 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - sh -c "printenv | sed 's/^\(.*=\)\([^\/]*$\)/export \1\"\2\"/g' > .env.sh && crontab -u root /etc/cron.d/crontab-cryptoscreener && service cron start && tail -f /var/log/crontab-cryptoscreener.log"
+      - sh -c "printenv | sed 's/^\(.*=\)\([^\/]*$$\)/export \1\"\2\"/g' > .env.sh && crontab -u root /etc/cron.d/crontab-cryptoscreener && service cron start && tail -f /var/log/crontab-cryptoscreener.log"
 
 volumes:
   database_volume:
