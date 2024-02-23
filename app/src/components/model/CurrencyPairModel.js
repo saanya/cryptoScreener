@@ -13,8 +13,8 @@ class CurrencyPairModel {
     }
     const execResult = await mysqlConnectionPool.query(
       `INSERT INTO ${CurrencyPairModel.tableName} (pair, exchange, createdAt)
-         VALUES ? AS new
-         ON DUPLICATE KEY UPDATE pair = new.pair`,
+         VALUES ?
+         ON DUPLICATE KEY UPDATE pair = pair`,
       [values],
     )
     if (!execResult || !execResult.affectedRows) {
