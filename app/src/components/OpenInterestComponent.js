@@ -50,6 +50,9 @@ Signal number: ${signalNumber}`
     let currencyPairs = await this.#currencyPairModel.getByExchange(exchange)
 
     let usersData = await this.#userModel.getAll(UserStatusEnum.active)
+    if (usersData.length === 0) {
+      return
+    }
     console.log(usersData)
     let userIds = usersData.map((item) => item.id)
     let userSettingsData = await this.#userSettingsModel.getByUserIds(userIds)
