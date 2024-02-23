@@ -1,0 +1,36 @@
+{
+  "name": "cryptoscreener",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "startSandbox": "nodemon --inspect=0.0.0.0:9299  index.js",
+    "create-db": "node ./src/tools/createDb.js",
+    "db-migrate-create": "node node_modules/db-migrate/bin/db-migrate create --migrations-dir=./src/migrations --config=./src/configs/migrations/projectMigrations.json",
+    "db-migrate-down": "node node_modules/db-migrate/bin/db-migrate down --migrations-dir=./src/migrations --config=./src/configs/migrations/projectMigrations.json",
+    "db-migrate-up": "node node_modules/db-migrate/bin/db-migrate up --migrations-dir=./src/migrations --config=./src/configs/migrations/projectMigrations.json"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.3",
+    "module-alias": "^2.2.2",
+    "telegraf": "4.15.3",
+    "mysql2": "^2.3.3",
+    "db-migrate": "^0.11.11",
+    "db-migrate-mysql": "^2.1.1",
+    "date-and-time": "^0.13.1"
+  },
+  "_moduleAliases": {
+    "~": "./src"
+  },
+  "prettier": {
+    "bracketSpacing": false,
+    "jsxBracketSameLine": true,
+    "trailingComma": "all",
+    "singleQuote": true,
+    "semi": false
+  }
+}

@@ -1,0 +1,18 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+HOME=/var/www/
+BASH_ENV=/var/www/.env.sh
+
+# do not remove comment
+######### BINANCE ########
+#1 per day
+1 0 * * * bash -l -c "node ./src/tools/binance/currencyPair.js" > /var/log/crontab-cryptoscreener.log 2>&1 
+# 1 per minutes
+*/1 * * * * bash -l -c "sleep 15; node ./src/tools/binance/scheduler.js" > /var/log/crontab-cryptoscreener.log 2>&1
+*/1 * * * * bash -l -c "node ./src/tools/binance/openInterest.js" > /var/log/crontab-cryptoscreener.log 2>&1 
+*/1 * * * * bash -l -c "node ./src/tools/binance/pairPrice.js" > /var/log/crontab-cryptoscreener.log 2>&1 
+
+######### BYBIT ##########
+# 1 per minutes
+*/1 * * * * bash -l -c "sleep 15; node ./src/tools/bybit/scheduler.js" > /var/log/crontab-cryptoscreener.log 2>&1
+*/1 * * * * bash -l -c "node ./src/tools/bybit/openInterestAndPrice.js" > /var/log/crontab-cryptoscreener.log 2>&1 

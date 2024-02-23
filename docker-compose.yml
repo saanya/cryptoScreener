@@ -1,0 +1,64 @@
+version: "3.4"
+services:
+  cryptoscreener-mysql:
+    image: mysql
+    container_name: cryptoscreener-mysql
+    volumes:
+      - database_volume:/var/lib/mysql
+    environment:
+      - MYSQL_MASTER_PASSWORD=root
+      - MYSQL_SLAVE_PASSWORD=root
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_PASSWORD=root
+    networks:
+      - cryptoscreener-network
+
+  cryptoscreener-server:
+    image: cryptoscreener-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cryptoscreener-server
+    volumes:
+      - ./app:/var/www
+    links:
+      - cryptoscreener-mysql
+    depends_on:
+      - cryptoscreener-mysql
+    networks:
+      - cryptoscreener-network
+    ports:
+      - 9299:9299
+    env_file:
+      - app/.env
+    stdin_open: true
+    command: sh -c "npm run start"
+
+  cryptoscreener-server-cron:
+    image: cryptoscreener-server-cron:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+    container_name: cryptoscreener-server-cron
+    volumes:
+      - ./app:/var/www
+    env_file:
+      - app/.env
+    links:
+      - cryptoscreener-mysql
+    depends_on:
+      - cryptoscreener-mysql
+    networks:
+      - cryptoscreener-network
+    stdin_open: true
+    command:
+      - "/bin/sh"
+      - "-c"
+      - sh -c "printenv | sed 's/^\(.*=\)\([^\/]*$\)/export \1\"\2\"/g' > .env.sh && crontab -u root /etc/cron.d/crontab-cryptoscreener && service cron start && tail -f /var/log/crontab-cryptoscreener.log"
+
+volumes:
+  database_volume:
+
+networks:
+  cryptoscreener-network:
+    driver: bridge
