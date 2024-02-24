@@ -3,7 +3,6 @@ const {UserSettingsModel} = require('~/components/model/UserSettingsModel')
 const {TelegramComponent} = require('~/components/TelegramComponent')
 const {telegram} = require('~/configs/telegram')
 const {CurrencyPairModel} = require('~/components/model/CurrencyPairModel')
-const {ExchangeEnum} = require('~/enum/ExchangeEnum')
 const {OpenInterestModel} = require('~/components/model/OpenInterestModel')
 const {PairPriceModel} = require('~/components/model/PairPriceModel')
 const {UserStatusEnum} = require('~/enum/UserStatusEnum')
@@ -87,9 +86,11 @@ Signal number: ${signalNumber}`
       )
       let openInterestsData = await this.#openInterestModel.getByPeriod(
         new Date(dateFrom),
+        exchange,
       )
       let pairPricesData = await this.#pairPriceModel.getByPeriod(
         new Date(dateFrom),
+        exchange,
       )
       for (let currencyPair of currencyPairs) {
         let openInterestsByPairId = openInterestsData.filter(
@@ -149,20 +150,23 @@ Signal number: ${signalNumber}`
             )
             if (priceData.length > 0) {
               let lastPrice = parseFloat(priceData.pop().price).toFixed(6)
-              let lowePriceData = priceData.reduce((prev, curr) =>
-                prev.value < curr.value ? prev : curr,
-              )
-              let lowerPrice = parseFloat(lowePriceData.price).toFixed(6)
+              //   let lowePriceData = priceData.reduce((prev, curr) =>
+              //     prev.value < curr.value ? prev : curr,
+              //   )
+              //   let lowerPrice = parseFloat(lowePriceData.price).toFixed(6)
+              let beforeLastPrice = parseFloat(priceData.pop().price).toFixed(6)
 
               let pricePlus = 0,
                 priceMinus = 0
-              if (lastPrice > lowerPrice) {
+              if (lastPrice > beforeLastPrice) {
                 pricePlus = parseFloat(
-                  100 - parseFloat(lowerPrice / lastPrice).toFixed(6) * 100,
+                  100 -
+                    parseFloat(beforeLastPrice / lastPrice).toFixed(6) * 100,
                 ).toFixed(2)
               } else {
                 priceMinus = parseFloat(
-                  100 - parseFloat(lastPrice / lowerPrice).toFixed(6) * 100,
+                  100 -
+                    parseFloat(lastPrice / beforeLastPrice).toFixed(6) * 100,
                 ).toFixed(2)
               }
 

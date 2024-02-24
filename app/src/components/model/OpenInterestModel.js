@@ -24,14 +24,14 @@ class OpenInterestModel {
     return execResult.affectedRows
   }
 
-  async getByPeriod(dateFrom) {
+  async getByPeriod(dateFrom, exchange) {
     return mysqlConnectionPool
       .query(
         `SELECT ${OpenInterestModel.fields.join(',')} FROM ${
           OpenInterestModel.tableName
         }
-         WHERE createdAt >= ?`,
-        [dateFrom],
+         WHERE exchange = ? AND createdAt >= ?`,
+        [exchange, dateFrom],
       )
       .then((results) => {
         if (results && results.length === 0) {

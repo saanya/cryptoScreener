@@ -6,11 +6,13 @@ const {OpenInterestComponent} = require('~/components/OpenInterestComponent')
 const openInterestComponent = new OpenInterestComponent()
 
 processOpenInterests = async () => {
-  setTimeout(async () => {
-    await openInterestComponent.getOpenInterests(ExchangeEnum.binance)
-    console.log('BINANCE: open interest script done')
-    process.exit(0)
-  }, 2000)
+  const start = Date.now()
+  await openInterestComponent.getOpenInterests(ExchangeEnum.binance)
+  const end = Date.now()
+  console.log(
+    `BINANCE: open interest script done  Execution time: ${end - start} ms`,
+  )
+  process.exit(0)
 }
 
 processOpenInterests()

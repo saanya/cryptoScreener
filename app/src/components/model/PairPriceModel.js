@@ -28,14 +28,14 @@ class PairPriceModel {
     return execResult.affectedRows
   }
 
-  async getByPeriod(dateFrom) {
+  async getByPeriod(dateFrom, exchange) {
     return mysqlConnectionPool
       .query(
         `SELECT ${PairPriceModel.fields.join(',')} FROM ${
           PairPriceModel.tableName
         }
-         WHERE createdAt >= ?`,
-        [dateFrom],
+         WHERE exchange = ? AND createdAt >= ?`,
+        [exchange, dateFrom],
       )
       .then((results) => {
         if (results && results.length === 0) {
