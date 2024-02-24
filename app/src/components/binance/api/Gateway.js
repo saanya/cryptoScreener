@@ -1,6 +1,6 @@
 class Gateway {
-  FAPI_URL = 'https://api.binance.com'
-  BASE_API = 'https://fapi.binance.com'
+  FAPI_URL = 'https://fapi.binance.com'
+  BASE_API = 'https://api.binance.com'
 
   async getAllUsdtSymbols() {
     let result = []
