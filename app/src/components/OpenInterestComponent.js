@@ -21,6 +21,7 @@ class OpenInterestComponent {
   #userSignalModel = null
   #userExchangeModel = null
   static DATE_FORMAT = 'YYYY-MM-DD'
+  static OPEN_INTEREST_HOUR = 3
 
   constructor() {
     this.#telegram = new TelegramComponent(telegram.botToken)
@@ -94,7 +95,7 @@ Signal number: ${signalNumber}`
       )
       currentDate = new Date()
       const dateFromHistory = currentDate.setMinutes(
-        currentDate.getMinutes() - 180,
+        currentDate.getMinutes() - 3 * OpenInterestComponent.OPEN_INTEREST_HOUR,
       )
       currentDate = new Date()
       const dateToHistory = currentDate.setMinutes(currentDate.getMinutes() - 1)
