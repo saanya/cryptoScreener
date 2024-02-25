@@ -45,6 +45,40 @@ class PairPriceModel {
         return unpackMulti(results)
       })
   }
+
+  async getLowerByPeriod(dateFrom, dateTo, exchange) {
+    return mysqlConnectionPool
+      .query(
+        `SELECT MIN(value), pairId as avaragePrice FROM ${PairPriceModel.tableName}
+         WHERE exchange = ? AND createdAt >= ? AND createdAt < ?
+         GROUP BY pairId`,
+        [exchange, dateFrom, dateTo],
+      )
+      .then((results) => {
+        if (results && results.length === 0) {
+          return []
+        }
+
+        return unpackMulti(results)
+      })
+  }
+
+  async getHigherByPeriod(dateFrom, dateTo, exchange) {
+    return mysqlConnectionPool
+      .query(
+        `SELECT MIN(value), pairId as avaragePrice FROM ${PairPriceModel.tableName}
+       WHERE exchange = ? AND createdAt >= ? AND createdAt < ?
+       GROUP BY pairId`,
+        [exchange, dateFrom, dateTo],
+      )
+      .then((results) => {
+        if (results && results.length === 0) {
+          return []
+        }
+
+        return unpackMulti(results)
+      })
+  }
 }
 
 exports.PairPriceModel = PairPriceModel

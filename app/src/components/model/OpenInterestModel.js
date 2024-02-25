@@ -41,6 +41,40 @@ class OpenInterestModel {
         return unpackMulti(results)
       })
   }
+
+  async getMinByPeriod(dateFrom, dateTo, exchange) {
+    return mysqlConnectionPool
+      .query(
+        `SELECT MIN(value) as minOpenInterest, pairId  FROM ${OpenInterestModel.tableName}
+         WHERE exchange = ? AND createdAt >= ? AND createdAt < ?
+         GROUP BY pairId`,
+        [exchange, dateFrom, dateTo],
+      )
+      .then((results) => {
+        if (results && results.length === 0) {
+          return []
+        }
+
+        return unpackMulti(results)
+      })
+  }
+
+  async getMaxByPeriod(dateFrom, dateTo, exchange) {
+    return mysqlConnectionPool
+      .query(
+        `SELECT MAX(value) as maxOpenInterest, pairId FROM ${OpenInterestModel.tableName}
+       WHERE exchange = ? AND createdAt >= ? AND createdAt < ?
+       GROUP BY pairId`,
+        [exchange, dateFrom, dateTo],
+      )
+      .then((results) => {
+        if (results && results.length === 0) {
+          return []
+        }
+
+        return unpackMulti(results)
+      })
+  }
 }
 
 exports.OpenInterestModel = OpenInterestModel
