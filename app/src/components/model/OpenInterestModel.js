@@ -42,6 +42,23 @@ class OpenInterestModel {
       })
   }
 
+  async getAvarageByPeriod(dateFrom, dateTo, exchange) {
+    return mysqlConnectionPool
+      .query(
+        `SELECT AVG(value) as avarageOpenInterest, pairId  FROM ${OpenInterestModel.tableName}
+         WHERE exchange = ? AND createdAt >= ? AND createdAt < ?
+         GROUP BY pairId`,
+        [exchange, dateFrom, dateTo],
+      )
+      .then((results) => {
+        if (results && results.length === 0) {
+          return []
+        }
+
+        return unpackMulti(results)
+      })
+  }
+
   async getMinByPeriod(dateFrom, dateTo, exchange) {
     return mysqlConnectionPool
       .query(

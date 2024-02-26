@@ -143,6 +143,11 @@ ${BotHandlerComponent.percentagePlus} ${userSettingsData?.percentagePlus}
 ${BotHandlerComponent.percentageMinus} ${userSettingsData?.percentageMinus}`
       }
 
+      if (message === BotHandlerComponent.cancel) {
+        const exchangeData = await userExchangeModel.getByUserId(userData.id)
+        return ctx.reply(message, this.getBotButton(exchangeData))
+      }
+
       if (message === BotHandlerComponent.periodPlus) {
         return ctx.reply(BotHandlerComponent.hintValue, {
           reply_markup: {

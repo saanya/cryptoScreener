@@ -95,11 +95,19 @@ Signal number: ${signalNumber}`
       )
       currentDate = new Date()
       const dateFromHistory = currentDate.setMinutes(
-        currentDate.getMinutes() - 3 * OpenInterestComponent.OPEN_INTEREST_HOUR,
+        currentDate.getMinutes() -
+          60 * OpenInterestComponent.OPEN_INTEREST_HOUR,
       )
       currentDate = new Date()
       const dateToHistory = currentDate.setMinutes(currentDate.getMinutes() - 1)
       console.log(new Date(dateFromHistory), new Date(dateToHistory))
+
+      let avarageOpenInterestsData =
+        await this.#openInterestModel.getAvarageByPeriod(
+          new Date(dateFromHistory),
+          new Date(dateToHistory),
+          exchange,
+        )
       let minOpenInterestsData = await this.#openInterestModel.getMinByPeriod(
         new Date(dateFromHistory),
         new Date(dateToHistory),
@@ -118,27 +126,31 @@ Signal number: ${signalNumber}`
         )
 
         if (openInterestsByPairId.length > 0) {
+          let avarageOpenInterestsDataByPairId = avarageOpenInterestsData.find(
+            (item) => item.pairId === currencyPair.id,
+          )
+          if (typeof avarageOpenInterestsDataByPairId === 'undefined') {
+            continue
+          }
           let minOpenInterestsDataByPairId = minOpenInterestsData.find(
             (item) => item.pairId === currencyPair.id,
           )
+          if (typeof minOpenInterestsDataByPairId === 'undefined') {
+            continue
+          }
           let maxOpenInterestsDataByPairId = maxOpenInterestsData.find(
             (item) => item.pairId === currencyPair.id,
           )
+          if (typeof maxOpenInterestsDataByPairId === 'undefined') {
+            continue
+          }
 
           let diffOIpercentage =
             ((parseFloat(maxOpenInterestsDataByPairId.maxOpenInterest) -
               parseFloat(minOpenInterestsDataByPairId.minOpenInterest)) /
               maxOpenInterestsDataByPairId.maxOpenInterest) *
             100
-          //   console.log(
-          //     currencyPair.id,
-          //     minOpenInterestsDataByPairId,
-          //     maxOpenInterestsDataByPairId,
-          //     parseFloat(maxOpenInterestsDataByPairId.maxOpenInterest) -
-          //       parseFloat(minOpenInterestsDataByPairId.minOpenInterest),
-          //     diffOIpercentage,
-          //     currencyPair.pair,
-          //   )
+
           // let firstOpenInterests = parseInt(openInterestsByPairId.shift().value)
           let lastOpenInterest = parseInt(openInterestsByPairId.pop().value)
           let lowerOpenInterestValue = 0
@@ -171,8 +183,29 @@ Signal number: ${signalNumber}`
 
           if (
             parseInt(percentagePlus) >= userSettings.percentagePlus &&
-            diffOIpercentage < 2
+            parseInt(diffOIpercentage) < 2
           ) {
+            // console.log(
+            //   currencyPair.id,
+            //   minOpenInterestsDataByPairId,
+            //   maxOpenInterestsDataByPairId,
+            //   parseFloat(maxOpenInterestsDataByPairId.maxOpenInterest),
+            //   parseFloat(minOpenInterestsDataByPairId.minOpenInterest),
+            //   diffOIpercentage,
+            //   currencyPair.pair,
+            // )
+            // console.log(
+            //   'currencyPair:',
+            //   currencyPair.pair,
+            //   'avarageOpenInterest:',
+            //   avarageOpenInterestsDataByPairId.avarageOpenInterest,
+            //   'percentagePlus:',
+            //   percentagePlus,
+            //   'diffOIpercentage:',
+            //   diffOIpercentage,
+            //   avarageOpenInterestsDataByPairId.avarageOpenInterest <
+            //     percentagePlus,
+            // )
             let lastSignalData =
               await this.#userSignalModel.getLastByUserIdPairId(
                 userData.id,
