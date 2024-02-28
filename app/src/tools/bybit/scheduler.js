@@ -10,7 +10,9 @@ processOpenInterests = async () => {
   await openInterestComponent.getOpenInterests(ExchangeEnum.bybit)
   const end = Date.now()
   console.log(
-    `BYBIT: open interest script done  Execution time: ${end - start} ms`,
+    `BYBIT: open interest script done  Execution time: ${
+      end - start
+    } ms ${new Date()}`,
   )
   process.exit(0)
 }

@@ -53,7 +53,7 @@ Signal number: ${signalNumber}`
     if (usersData.length === 0) {
       return
     }
-    console.log(usersData)
+    //console.log(usersData)
     let userIds = usersData.map((item) => item.id)
     let userSettingsData = await this.#userSettingsModel.getByUserIds(userIds)
     let userExchangesData = await this.#userExchangeModel.getByUserIds(
@@ -65,7 +65,7 @@ Signal number: ${signalNumber}`
       let userSettings = userSettingsData.find(
         (item) => item.userId === userData.id,
       )
-      console.log(userSettings)
+      //console.log(userSettings)
       if (!userSettings) {
         continue
       }
@@ -73,7 +73,7 @@ Signal number: ${signalNumber}`
       let exchangeSettings = userExchangesData.find(
         (item) => item.userId === userData.id,
       )
-      console.log(exchangeSettings)
+      //console.log(exchangeSettings)
       if (
         !exchangeSettings ||
         exchangeSettings?.status === ExchangeStatusEnum.disabled
@@ -100,7 +100,7 @@ Signal number: ${signalNumber}`
       )
       currentDate = new Date()
       const dateToHistory = currentDate.setMinutes(currentDate.getMinutes() - 1)
-      console.log(new Date(dateFromHistory), new Date(dateToHistory))
+      //console.log(new Date(dateFromHistory), new Date(dateToHistory))
 
       let avarageOpenInterestsData =
         await this.#openInterestModel.getAvarageByPeriod(

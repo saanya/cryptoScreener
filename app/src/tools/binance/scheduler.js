@@ -10,7 +10,9 @@ processOpenInterests = async () => {
   await openInterestComponent.getOpenInterests(ExchangeEnum.binance)
   const end = Date.now()
   console.log(
-    `BINANCE: open interest script done  Execution time: ${end - start} ms`,
+    `BINANCE: open interest script done  Execution time: ${
+      end - start
+    } ms ${new Date()}`,
   )
   process.exit(0)
 }
