@@ -228,7 +228,7 @@ Signal number: ${signalNumber}`
             let priceData = pairPricesData.filter(
               (item) => item.pairId === currencyPair.id,
             )
-            if (priceData.length > 0) {
+            if (priceData.length > 2) {
               let lastPrice = parseFloat(priceData.pop().price).toFixed(6)
               //   let lowePriceData = priceData.reduce((prev, curr) =>
               //     prev.value < curr.value ? prev : curr,
