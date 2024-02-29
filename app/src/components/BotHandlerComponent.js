@@ -149,7 +149,8 @@ Your settings:
 ${BotHandlerComponent.periodPlus} ${userSettingsData?.periodPlus} 
 ${BotHandlerComponent.periodSilence} ${userSettingsData?.periodSilence} 
 ${BotHandlerComponent.percentagePlus} ${userSettingsData?.percentagePlus} 
-${BotHandlerComponent.percentageAfterSilence} ${userSettingsData?.percentageAfterSilence}`
+${BotHandlerComponent.percentageAfterSilence} ${userSettingsData?.percentageAfterSilence}
+${BotHandlerComponent.skipSignalPeriod} ${userSettingsData?.skipSignalPeriod}`
       }
 
       if (message === BotHandlerComponent.cancel) {
