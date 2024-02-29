@@ -7,36 +7,40 @@ class UserSettingsModel {
   static fields = [
     'userId',
     'periodPlus',
-    'periodMinus',
+    'periodSilence',
     'percentagePlus',
-    'percentageMinus',
+    'percentageAfterSilence',
+    'skipSignalPeriod',
     'createdAt',
   ]
 
   save(
     userId,
     periodPlus,
-    periodMinus,
+    periodSilence,
     percentagePlus,
-    percentageMinus,
+    percentageAfterSilence,
+    skipSignalPeriod,
     createdAt = new Date(),
   ) {
     return mysqlConnectionPool
       .query(
-        `INSERT INTO ${UserSettingsModel.tableName} (userId, periodPlus, periodMinus, percentagePlus, percentageMinus, createdAt)
-         VALUES(?, ?, ?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE periodPlus = ?, periodMinus = ?, percentageMinus = ?, percentageMinus = ?`,
+        `INSERT INTO ${UserSettingsModel.tableName} (userId, periodPlus, periodSilence, percentagePlus, percentageAfterSilence, skipSignalPeriod, createdAt)
+         VALUES(?, ?, ?, ?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE periodPlus = ?, periodSilence = ?, percentagePlus = ?, percentageAfterSilence = ?, skipSignalPeriod =?`,
         [
           userId,
           periodPlus,
-          periodMinus,
+          periodSilence,
           percentagePlus,
-          percentageMinus,
+          percentageAfterSilence,
+          skipSignalPeriod,
           createdAt,
           periodPlus,
-          periodMinus,
+          periodSilence,
           percentagePlus,
-          percentageMinus,
+          percentageAfterSilence,
+          skipSignalPeriod,
         ],
       )
       .then((execResult) => {
@@ -117,17 +121,21 @@ class UserSettingsModel {
         result.fields = [...result.fields, 'periodPlus=?']
         result.params = [...result.params, data.periodPlus]
       }
-      if (Object.hasOwnProperty.bind(data)('periodMinus')) {
-        result.fields = [...result.fields, 'periodMinus=?']
-        result.params = [...result.params, data.periodMinus]
+      if (Object.hasOwnProperty.bind(data)('periodSilence')) {
+        result.fields = [...result.fields, 'periodSilence=?']
+        result.params = [...result.params, data.periodSilence]
       }
       if (Object.hasOwnProperty.bind(data)('percentagePlus')) {
         result.fields = [...result.fields, 'percentagePlus=?']
         result.params = [...result.params, data.percentagePlus]
       }
-      if (Object.hasOwnProperty.bind(data)('percentageMinus')) {
-        result.fields = [...result.fields, 'percentageMinus=?']
-        result.params = [...result.params, data.percentageMinus]
+      if (Object.hasOwnProperty.bind(data)('percentageAfterSilence')) {
+        result.fields = [...result.fields, 'percentageAfterSilence=?']
+        result.params = [...result.params, data.percentageAfterSilence]
+      }
+      if (Object.hasOwnProperty.bind(data)('skipSignalPeriod')) {
+        result.fields = [...result.fields, 'skipSignalPeriod=?']
+        result.params = [...result.params, data.skipSignalPeriod]
       }
 
       resolve(result)

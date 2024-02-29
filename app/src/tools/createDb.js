@@ -6,7 +6,6 @@ const mysql = require('mysql2')
 
 let dbSettings = JSON.parse(JSON.stringify(mysqlConnection))
 delete dbSettings.database
-console.log(dbSettings)
 // create the connection to database
 const rootMysqlConnectionPool = mysql.createPool(dbSettings)
 rootMysqlConnectionPool.getConnection(function (err, connection) {
@@ -14,7 +13,6 @@ rootMysqlConnectionPool.getConnection(function (err, connection) {
     console.log('Error in connection database', err)
     return
   }
-  console.log(mysqlConnection.database)
   connection
     .promise()
     .query(

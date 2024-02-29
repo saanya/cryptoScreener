@@ -95,8 +95,7 @@ Signal number: ${signalNumber}`
       )
       currentDate = new Date()
       const dateFromHistory = currentDate.setMinutes(
-        currentDate.getMinutes() -
-          60 * OpenInterestComponent.OPEN_INTEREST_HOUR,
+        currentDate.getMinutes() - userSettings.periodSilence,
       )
       currentDate = new Date()
       const dateToHistory = currentDate.setMinutes(currentDate.getMinutes() - 1)
@@ -183,7 +182,7 @@ Signal number: ${signalNumber}`
 
           if (
             parseInt(percentagePlus) >= userSettings.percentagePlus &&
-            parseInt(diffOIpercentage) < 2
+            parseInt(diffOIpercentage) < userSettings.percentageAfterSilence
           ) {
             // console.log(
             //   currencyPair.id,
@@ -212,9 +211,14 @@ Signal number: ${signalNumber}`
                 currencyPair.id,
                 exchange,
               )
+            let currentDate = new Date()
+            const skipSignalPeriod = currentDate.setMinutes(
+              currentDate.getMinutes() - userSettings.skipSignalPeriod,
+            )
+            console.log(skipSignalPeriod)
             if (
               lastSignalData &&
-              new Date(lastSignalData.createdAt) > new Date(dateFrom)
+              new Date(lastSignalData.createdAt) > new Date(skipSignalPeriod)
             ) {
               continue
             }

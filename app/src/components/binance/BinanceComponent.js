@@ -1,40 +1,11 @@
 const {Gateway} = require('~/components/binance/api/Gateway')
-// const {UserModel} = require('~/components/model/UserModel')
-// const {UserSettingsModel} = require('~/components/model/UserSettingsModel')
-// const {TelegramComponent} = require('~/components/TelegramComponent')
-// const {telegram} = require('~/configs/telegram')
-// const {CurrencyPairModel} = require('~/components/model/CurrencyPairModel')
-// const {ExchangeEnum} = require('~/enum/ExchangeEnum')
-// const {OpenInterestModel} = require('~/components/model/OpenInterestModel')
-// const {PairPriceModel} = require('~/components/model/PairPriceModel')
-// const {UserStatusEnum} = require('~/enum/UserStatusEnum')
-// const {ExchangeStatusEnum} = require('~/enum/ExchangeStatusEnum')
-// const {UserSignalModel} = require('~/components/model/UserSignalModel')
-// const {UserExchangeModel} = require('~/components/model/UserExchangeModel')
-// const date = require('date-and-time')
 
 class BinanceComponent {
   #gateway = null
-  // #telegram = null
-  // #userModel = null
-  // #userSettingsModel = null
-  // #currencyPairModel = null
-  // #openInterestModel = null
-  // #pairPriceModel = null
-  // #userSignalModel = null
-  // #userExchangeModel = null
   static DATE_FORMAT = 'YYYY-MM-DD'
 
   constructor() {
     this.#gateway = new Gateway()
-    // this.#telegram = new TelegramComponent(telegram.botToken)
-    // this.#userModel = new UserModel()
-    // this.#userSettingsModel = new UserSettingsModel()
-    // this.#currencyPairModel = new CurrencyPairModel()
-    // this.#openInterestModel = new OpenInterestModel()
-    // this.#pairPriceModel = new PairPriceModel()
-    // this.#userSignalModel = new UserSignalModel()
-    // this.#userExchangeModel = new UserExchangeModel()
   }
   async getAllUsdtSymbols() {
     return await this.#gateway.getAllUsdtSymbols()

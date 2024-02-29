@@ -7,13 +7,9 @@ const {UserMessageModel} = require('~/components/model/UserMessageModel')
 const {TelegramComponent} = require('~/components/TelegramComponent')
 const {ExchangeEnum} = require('~/enum/ExchangeEnum')
 const {ExchangeStatusEnum} = require('~/enum/ExchangeStatusEnum')
-const {ButtonEnum} = require('~/enum/ButtonEnum')
 const {UserStatusEnum} = require('~/enum/UserStatusEnum')
 
-const telegramComponent = new TelegramComponent(
-  telegram.botToken,
-  telegram.chatId,
-)
+const telegramComponent = new TelegramComponent(telegram.botToken)
 const userModel = new UserModel()
 const userExchangeModel = new UserExchangeModel()
 const userSettingsModel = new UserSettingsModel()
@@ -26,12 +22,15 @@ class BotHandlerComponent {
   static bybitTurnOn = '✅ Bybit'
   static bybitTurnOff = '❌ Bybit'
   static periodPlus = '⤴️ Period when OI grow up'
-  static periodMinus = '⤵️ Period when OI go down'
+  static periodSilence = '〰️ Silence period'
   static percentagePlus = '⤴️ Percentage of OI ➕'
-  static percentageMinus = '⤵️ Percentage of OI ➖'
+  static percentageAfterSilence = 'Percentage of jumping after silence ➕'
+  static skipSignalPeriod = '‼️ Skip signal period'
   static settings = 'My Settings'
   static hintValue = 'Please enter number between 1 and 30'
+  static hintSilenceValue = 'Please enter number between 5 and 720'
   static wrongValue = 'Wrong number, should be between 1 and 30'
+  static wrongSilenceValue = 'Please enter number between 5 and 720'
   static cancel = 'Cancel'
 
   constructor() {
@@ -66,17 +65,26 @@ class BotHandlerComponent {
           ],
           [
             {text: BotHandlerComponent.periodPlus},
-            {text: BotHandlerComponent.periodMinus},
+            {text: BotHandlerComponent.periodSilence},
           ],
           [
             {text: BotHandlerComponent.percentagePlus},
-            {text: BotHandlerComponent.percentageMinus},
+            {text: BotHandlerComponent.percentageAfterSilence},
           ],
-          [{text: BotHandlerComponent.settings}],
+
+          [
+            {text: BotHandlerComponent.skipSignalPeriod},
+            {text: BotHandlerComponent.settings},
+          ],
         ],
         resize_keyboard: true,
       },
     }
+  }
+
+  async getUserButtonWithMessage(ctx, message, userId) {
+    const exchangeData = await userExchangeModel.getByUserId(userId)
+    return ctx.reply(message, this.getBotButton(exchangeData))
   }
 
   startListeners() {
@@ -109,14 +117,15 @@ class BotHandlerComponent {
       await userSettingsModel.save(
         userId,
         userSettings.periodPlus,
-        userSettings.periodMinus,
+        userSettings.periodSilence,
         userSettings.percentagePlus,
-        userSettings.percentageMinus,
+        userSettings.percentageAfterSilence,
+        userSettings.skipSignalPeriod,
       )
       await userMessageModel.deleteById(userId)
 
       return ctx.reply(
-        'Welcome to the Crypro Screener bot, choose your settings below',
+        'Welcome to the Crypro Screener Silence bot, choose your settings below',
         this.getBotButton(exchangeData),
       )
     })
@@ -138,14 +147,13 @@ class BotHandlerComponent {
         message = `
 Your settings:
 ${BotHandlerComponent.periodPlus} ${userSettingsData?.periodPlus} 
-${BotHandlerComponent.periodMinus} ${userSettingsData?.periodMinus} 
+${BotHandlerComponent.periodSilence} ${userSettingsData?.periodSilence} 
 ${BotHandlerComponent.percentagePlus} ${userSettingsData?.percentagePlus} 
-${BotHandlerComponent.percentageMinus} ${userSettingsData?.percentageMinus}`
+${BotHandlerComponent.percentageAfterSilence} ${userSettingsData?.percentageAfterSilence}`
       }
 
       if (message === BotHandlerComponent.cancel) {
-        const exchangeData = await userExchangeModel.getByUserId(userData.id)
-        return ctx.reply(message, this.getBotButton(exchangeData))
+        return this.getUserButtonWithMessage(ctx, message, userData.id)
       }
 
       if (message === BotHandlerComponent.periodPlus) {
@@ -157,8 +165,8 @@ ${BotHandlerComponent.percentageMinus} ${userSettingsData?.percentageMinus}`
         })
       }
 
-      if (message === BotHandlerComponent.periodMinus) {
-        return ctx.reply(BotHandlerComponent.hintValue, {
+      if (message === BotHandlerComponent.periodSilence) {
+        return ctx.reply(BotHandlerComponent.hintSilenceValue, {
           reply_markup: {
             keyboard: [[{text: BotHandlerComponent.cancel}]],
             resize_keyboard: true,
@@ -175,7 +183,16 @@ ${BotHandlerComponent.percentageMinus} ${userSettingsData?.percentageMinus}`
         })
       }
 
-      if (message === BotHandlerComponent.percentageMinus) {
+      if (message === BotHandlerComponent.percentageAfterSilence) {
+        return ctx.reply(BotHandlerComponent.hintValue, {
+          reply_markup: {
+            keyboard: [[{text: BotHandlerComponent.cancel}]],
+            resize_keyboard: true,
+          },
+        })
+      }
+
+      if (message === BotHandlerComponent.skipSignalPeriod) {
         return ctx.reply(BotHandlerComponent.hintValue, {
           reply_markup: {
             keyboard: [[{text: BotHandlerComponent.cancel}]],
@@ -186,12 +203,11 @@ ${BotHandlerComponent.percentageMinus} ${userSettingsData?.percentageMinus}`
 
       if (previousMessage?.message === BotHandlerComponent.periodPlus) {
         if (parseInt(message) < 1 || parseInt(message) > 30) {
-          return ctx.reply(BotHandlerComponent.wrongValue, {
-            reply_markup: {
-              keyboard: [[{text: BotHandlerComponent.cancel}]],
-              resize_keyboard: true,
-            },
-          })
+          return this.getUserButtonWithMessage(
+            ctx,
+            BotHandlerComponent.wrongValue,
+            userData.id,
+          )
         } else {
           await userSettingsModel.updateByUserId(userData.id, {
             periodPlus: message,
@@ -199,29 +215,27 @@ ${BotHandlerComponent.percentageMinus} ${userSettingsData?.percentageMinus}`
         }
       }
 
-      if (previousMessage?.message === BotHandlerComponent.periodMinus) {
-        if (parseInt(message) < 1 || parseInt(message) > 30) {
-          return ctx.reply(BotHandlerComponent.wrongValue, {
-            reply_markup: {
-              keyboard: [[{text: BotHandlerComponent.cancel}]],
-              resize_keyboard: true,
-            },
-          })
+      if (previousMessage?.message === BotHandlerComponent.periodSilence) {
+        if (parseInt(message) < 5 || parseInt(message) > 720) {
+          return this.getUserButtonWithMessage(
+            ctx,
+            BotHandlerComponent.wrongSilenceValue,
+            userData.id,
+          )
         } else {
           await userSettingsModel.updateByUserId(userData.id, {
-            periodMinus: message,
+            periodSilence: message,
           })
         }
       }
 
       if (previousMessage?.message === BotHandlerComponent.percentagePlus) {
         if (parseInt(message) < 1 || parseInt(message) > 30) {
-          return ctx.reply(BotHandlerComponent.wrongValue, {
-            reply_markup: {
-              keyboard: [[{text: BotHandlerComponent.cancel}]],
-              resize_keyboard: true,
-            },
-          })
+          return this.getUserButtonWithMessage(
+            ctx,
+            BotHandlerComponent.wrongValue,
+            userData.id,
+          )
         } else {
           await userSettingsModel.updateByUserId(userData.id, {
             percentagePlus: message,
@@ -229,17 +243,32 @@ ${BotHandlerComponent.percentageMinus} ${userSettingsData?.percentageMinus}`
         }
       }
 
-      if (previousMessage?.message === BotHandlerComponent.percentageMinus) {
+      if (
+        previousMessage?.message === BotHandlerComponent.percentageAfterSilence
+      ) {
         if (parseInt(message) < 1 || parseInt(message) > 30) {
-          return ctx.reply(BotHandlerComponent.wrongValue, {
-            reply_markup: {
-              keyboard: [[{text: BotHandlerComponent.cancel}]],
-              resize_keyboard: true,
-            },
-          })
+          return this.getUserButtonWithMessage(
+            ctx,
+            BotHandlerComponent.wrongValue,
+            userData.id,
+          )
         } else {
           await userSettingsModel.updateByUserId(userData.id, {
-            percentageMinus: message,
+            percentageAfterSilence: message,
+          })
+        }
+      }
+
+      if (previousMessage?.message === BotHandlerComponent.skipSignalPeriod) {
+        if (parseInt(message) < 1 || parseInt(message) > 30) {
+          return this.getUserButtonWithMessage(
+            ctx,
+            BotHandlerComponent.wrongValue,
+            userData.id,
+          )
+        } else {
+          await userSettingsModel.updateByUserId(userData.id, {
+            skipSignalPeriod: message,
           })
         }
       }
