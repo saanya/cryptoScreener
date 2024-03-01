@@ -124,7 +124,7 @@ Signal number: ${signalNumber}`
           (item) => item.pairId === currencyPair.id,
         )
 
-        if (openInterestsByPairId.length > 0) {
+        if (openInterestsByPairId.length > 2) {
           let avarageOpenInterestsDataByPairId = avarageOpenInterestsData.find(
             (item) => item.pairId === currencyPair.id,
           )
