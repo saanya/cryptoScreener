@@ -21,16 +21,12 @@ processOpenInterests = async () => {
 
 processPump = async () => {
   const start = Date.now()
-  setTimeout(async () => {
-    await pumpComponent.processPump(ExchangeEnum.bybit)
-    const end = Date.now()
-    console.log(
-      `BYBIT: pump script done  Execution time: ${
-        end - start
-      } ms ${new Date()}`,
-    )
-    process.exit(0)
-  }, 2000)
+  await pumpComponent.processPump(ExchangeEnum.bybit)
+  const end = Date.now()
+  console.log(
+    `BYBIT: pump script done  Execution time: ${end - start} ms ${new Date()}`,
+  )
+  process.exit(0)
 }
 
 const type = process.argv.slice(2)[0]
