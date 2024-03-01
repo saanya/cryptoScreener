@@ -5,11 +5,10 @@ const {
 const {TelegramComponent} = require('~/components/TelegramComponent')
 const {telegram} = require('~/configs/telegram')
 const {CurrencyPairModel} = require('~/components/model/CurrencyPairModel')
-const {OpenInterestModel} = require('~/components/model/OpenInterestModel')
 const {PairPriceModel} = require('~/components/model/PairPriceModel')
 const {UserStatusEnum} = require('~/enum/UserStatusEnum')
 const {ExchangeStatusEnum} = require('~/enum/ExchangeStatusEnum')
-const {UserSignalModel} = require('~/components/model/UserSignalModel')
+const {UserSignalPumpModel} = require('~/components/model/UserSignalPumpModel')
 const {UserExchangeModel} = require('~/components/model/UserExchangeModel')
 const {UserBotTypeEnum} = require('~/enum/UserBotTypeEnum')
 const date = require('date-and-time')
@@ -19,20 +18,18 @@ class PumpComponent {
   #userModel = null
   #userPumpSettingsModel = null
   #currencyPairModel = null
-  #openInterestModel = null
   #pairPriceModel = null
-  #userSignalModel = null
+  #userSignalPumpModel = null
   #userExchangeModel = null
   static DATE_FORMAT = 'YYYY-MM-DD'
 
   constructor() {
-    this.#telegram = new TelegramComponent(telegram.botToken)
+    this.#telegram = new TelegramComponent(telegram.botPumpToken)
     this.#userModel = new UserModel()
     this.#userPumpSettingsModel = new UserPumpSettingsModel()
     this.#currencyPairModel = new CurrencyPairModel()
-    this.#openInterestModel = new OpenInterestModel()
     this.#pairPriceModel = new PairPriceModel()
-    this.#userSignalModel = new UserSignalModel()
+    this.#userSignalPumpModel = new UserSignalPumpModel()
     this.#userExchangeModel = new UserExchangeModel()
   }
 
@@ -40,14 +37,31 @@ class PumpComponent {
     return `<a href='https://www.coinglass.com/tv/en/${echange}_${currencyPair}'>${currencyPair}</a>`
   }
 
-  getMessage(echange, currencyPair, percentagePlus, price, signalNumber) {
-    return `${echange}: ${this.getCoinbaseBinanceUrl(echange, currencyPair)}
-OI +${percentagePlus}% 
-${price > 0 ? 'Price +' + price : 'Price -' + price}% 
-Signal number: ${signalNumber}`
+  getMessage(
+    echange,
+    currencyPair,
+    percentagePlus,
+    lastPrice,
+    lowerPrice,
+    signalNumber,
+  ) {
+    let echangeSymbol = ''
+    if (echange === ExchangeEnum.binance) {
+      echangeSymbol = '🟡'
+    } else if (echange === ExchangeEnum.bybit) {
+      echangeSymbol = '⚫'
+    }
+    return `${echangeSymbol} ${echange}: ${this.getCoinbaseBinanceUrl(
+      echange,
+      currencyPair,
+    )}
+⚡ Price +${percentagePlus}% (${parseFloat(lastPrice)} - ${parseFloat(
+      lowerPrice,
+    )} $)
+Signal 24h: ${signalNumber}`
   }
 
-  async getOpenInterests(exchange) {
+  async processPump(exchange) {
     debugger
     let currencyPairs = await this.#currencyPairModel.getByExchange(exchange)
 
@@ -55,7 +69,6 @@ Signal number: ${signalNumber}`
     if (usersData.length === 0) {
       return
     }
-    //console.log(usersData)
     let userIds = usersData.map((item) => item.id)
     let userSettingsData = await this.#userPumpSettingsModel.getByUserIds(
       userIds,
@@ -70,7 +83,7 @@ Signal number: ${signalNumber}`
       let userSettings = userSettingsData.find(
         (item) => item.userId === userData.id,
       )
-      //console.log(userSettings)
+      console.log(userSettings)
       if (!userSettings) {
         continue
       }
@@ -78,7 +91,6 @@ Signal number: ${signalNumber}`
       let exchangeSettings = userExchangesData.find(
         (item) => item.userId === userData.id,
       )
-      //console.log(exchangeSettings)
       if (
         !exchangeSettings ||
         exchangeSettings?.status === ExchangeStatusEnum.disabled
@@ -96,16 +108,17 @@ Signal number: ${signalNumber}`
       )
 
       for (let currencyPair of currencyPairs) {
-        let lastSignalData = await this.#userSignalModel.getLastByUserIdPairId(
-          userData.id,
-          currencyPair.id,
-          exchange,
-        )
+        let lastSignalData =
+          await this.#userSignalPumpModel.getLastByUserIdPairId(
+            userData.id,
+            currencyPair.id,
+            exchange,
+          )
         let currentDate = new Date()
         const skipSignalPeriod = currentDate.setMinutes(
           currentDate.getMinutes() - userSettings.skipSignalPeriod,
         )
-        console.log(skipSignalPeriod)
+
         if (
           lastSignalData &&
           new Date(lastSignalData.createdAt) > new Date(skipSignalPeriod)
@@ -113,99 +126,57 @@ Signal number: ${signalNumber}`
           continue
         }
 
-        let countSignal = await this.#userSignalModel.getCountByDate(
+        let countSignal = await this.#userSignalPumpModel.getCountByDate(
           userData.id,
           currencyPair.id,
           exchange,
-          date.format(new Date(), OpenInterestComponent.DATE_FORMAT),
+          date.format(new Date(), PumpComponent.DATE_FORMAT),
         )
+        if (countSignal > userSettings.skipSignalCount) {
+          continue
+        }
         let priceData = pairPricesData.filter(
           (item) => item.pairId === currencyPair.id,
         )
         if (priceData.length > 2) {
           let lastPrice = parseFloat(priceData.pop().price).toFixed(6)
-          //   let lowePriceData = priceData.reduce((prev, curr) =>
-          //     prev.value < curr.value ? prev : curr,
-          //   )
-          //   let lowerPrice = parseFloat(lowePriceData.price).toFixed(6)
-          let beforeLastPrice = parseFloat(priceData.pop().price).toFixed(6)
-
-          let pricePlus = 0,
-            priceMinus = 0
-          if (lastPrice > beforeLastPrice) {
-            pricePlus = parseFloat(
-              100 - parseFloat(beforeLastPrice / lastPrice).toFixed(6) * 100,
-            ).toFixed(2)
-          } else {
-            priceMinus = parseFloat(
-              100 - parseFloat(lastPrice / beforeLastPrice).toFixed(6) * 100,
-            ).toFixed(2)
-          }
-
-          if (pricePlus) {
-            await this.#userSignalModel.save(
-              userData.id,
-              currencyPair.id,
-              exchange,
-              percentagePlus,
-              percentageMinus,
-              pricePlus,
-              priceMinus,
-            )
-            await this.#telegram.sendMessage(
-              this.getMessage(
-                exchange,
-                currencyPair.pair,
-                percentagePlus,
-                pricePlus,
-                countSignal,
-              ),
-              userData.chatId,
-            )
-          } else {
-            await this.#userSignalModel.save(
-              userData.id,
-              currencyPair.id,
-              exchange,
-              percentagePlus,
-              percentageMinus,
-              pricePlus,
-              priceMinus,
-            )
-            await this.#telegram.sendMessage(
-              this.getMessage(
-                exchange,
-                currencyPair.pair,
-                percentagePlus,
-                priceMinus,
-                countSignal,
-              ),
-              userData.chatId,
-            )
-          }
-        } else {
-          await this.#userSignalModel.save(
-            userData.id,
-            currencyPair.id,
-            exchange,
-            percentagePlus,
-            percentageMinus,
-            0,
-            0,
+          let lowePriceData = priceData.sort(
+            (prev, curr) => parseFloat(prev.price) - parseFloat(curr.price),
           )
-          await this.#telegram.sendMessage(
-            this.getMessage(
-              exchange,
-              currencyPair.pair,
-              percentagePlus,
-              0,
-              countSignal,
-            ),
-            userData.chatId,
-          )
+
+          let lowerPrice = parseFloat(lowePriceData.pop().price).toFixed(6)
+          // let beforeLastPrice = parseFloat(priceData.pop().price).toFixed(6)
+          if (lastPrice > lowerPrice) {
+            let percentagePlus = parseFloat(
+              100 - parseFloat(lowerPrice / lastPrice).toFixed(6) * 100,
+            ).toFixed(2)
+
+            if (percentagePlus > userSettings.percentagePlus) {
+              console.log(
+                `PRICE UP`,
+                percentagePlus,
+                userSettings.percentagePlus,
+              )
+              await this.#userSignalPumpModel.save(
+                userData.id,
+                currencyPair.id,
+                exchange,
+                percentagePlus,
+              )
+              await this.#telegram.sendMessage(
+                this.getMessage(
+                  exchange,
+                  currencyPair.pair,
+                  percentagePlus,
+                  lastPrice,
+                  lowerPrice,
+                  countSignal,
+                ),
+                userData.chatId,
+              )
+            }
+          }
         }
-
-        console.log(`OI: ${exchange}: ${currencyPair.pair} +${percentagePlus}`)
       }
     }
   }

@@ -160,7 +160,8 @@ class BotPumpHandlerComponent {
 Your settings:
 ${BotPumpHandlerComponent.periodPlus} ${userSettingsData?.periodPlus} 
 ${BotPumpHandlerComponent.percentagePlus} ${userSettingsData?.percentagePlus} 
-${BotPumpHandlerComponent.skipSignalPeriod} ${userSettingsData?.skipSignalPeriod}`
+${BotPumpHandlerComponent.skipSignalPeriod} ${userSettingsData?.skipSignalPeriod}
+${BotPumpHandlerComponent.skipSignalCount} ${userSettingsData?.skipSignalCount}`
       }
 
       if (message === BotPumpHandlerComponent.cancel) {

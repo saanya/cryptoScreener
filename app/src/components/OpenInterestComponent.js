@@ -10,6 +10,7 @@ const {ExchangeStatusEnum} = require('~/enum/ExchangeStatusEnum')
 const {UserSignalModel} = require('~/components/model/UserSignalModel')
 const {UserExchangeModel} = require('~/components/model/UserExchangeModel')
 const {UserBotTypeEnum} = require('~/enum/UserBotTypeEnum')
+const {ExchangeEnum} = require('~/enum/ExchangeEnum')
 const date = require('date-and-time')
 
 class OpenInterestComponent {
@@ -39,10 +40,20 @@ class OpenInterestComponent {
   }
 
   getMessage(echange, currencyPair, percentagePlus, price, signalNumber) {
-    return `${echange}: ${this.getCoinbaseBinanceUrl(echange, currencyPair)}
-OI +${percentagePlus}% 
-${price > 0 ? 'Price +' + price : 'Price -' + price}% 
-Signal number: ${signalNumber}`
+    let echangeSymbol = ''
+    if (echange === ExchangeEnum.binance) {
+      echangeSymbol = '🟡'
+    } else if (echange === ExchangeEnum.bybit) {
+      echangeSymbol = '⚫'
+    }
+
+    return `${echangeSymbol} ${echange}: ${this.getCoinbaseBinanceUrl(
+      echange,
+      currencyPair,
+    )}
+🚀 OI +${percentagePlus}% 
+⚡ ${price > 0 ? 'Price +' + price : 'Price -' + price}% 
+🔊 Signal 24h: ${signalNumber}`
   }
 
   async getOpenInterests(exchange) {
@@ -235,23 +246,22 @@ Signal number: ${signalNumber}`
             )
             if (priceData.length > 2) {
               let lastPrice = parseFloat(priceData.pop().price).toFixed(6)
-              //   let lowePriceData = priceData.reduce((prev, curr) =>
-              //     prev.value < curr.value ? prev : curr,
-              //   )
-              //   let lowerPrice = parseFloat(lowePriceData.price).toFixed(6)
-              let beforeLastPrice = parseFloat(priceData.pop().price).toFixed(6)
+              let lowePriceData = priceData.sort(
+                (prev, curr) => parseFloat(prev.price) - parseFloat(curr.price),
+              )
+
+              let lowerPrice = parseFloat(lowePriceData.pop().price).toFixed(6)
+              //let beforeLastPrice = parseFloat(priceData.pop().price).toFixed(6)
 
               let pricePlus = 0,
                 priceMinus = 0
-              if (lastPrice > beforeLastPrice) {
+              if (lastPrice > lowerPrice) {
                 pricePlus = parseFloat(
-                  100 -
-                    parseFloat(beforeLastPrice / lastPrice).toFixed(6) * 100,
+                  100 - parseFloat(lowerPrice / lastPrice).toFixed(6) * 100,
                 ).toFixed(2)
               } else {
                 priceMinus = parseFloat(
-                  100 -
-                    parseFloat(lastPrice / beforeLastPrice).toFixed(6) * 100,
+                  100 - parseFloat(lastPrice / lowerPrice).toFixed(6) * 100,
                 ).toFixed(2)
               }
 
