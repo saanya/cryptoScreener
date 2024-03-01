@@ -52,7 +52,7 @@ class OpenInterestComponent {
       currencyPair,
     )}
 🚀 OI +${percentagePlus}% 
-⚡ ${price > 0 ? 'Price +' + price : 'Price -' + price}% 
+💸 ${price > 0 ? 'Price +' + price : 'Price -' + price}% 
 🔊 Signal 24h: ${signalNumber}`
   }
 

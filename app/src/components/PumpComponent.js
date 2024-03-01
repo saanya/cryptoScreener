@@ -11,6 +11,7 @@ const {ExchangeStatusEnum} = require('~/enum/ExchangeStatusEnum')
 const {UserSignalPumpModel} = require('~/components/model/UserSignalPumpModel')
 const {UserExchangeModel} = require('~/components/model/UserExchangeModel')
 const {UserBotTypeEnum} = require('~/enum/UserBotTypeEnum')
+const {ExchangeEnum} = require('~/enum/ExchangeEnum')
 const date = require('date-and-time')
 
 class PumpComponent {
@@ -55,7 +56,7 @@ class PumpComponent {
       echange,
       currencyPair,
     )}
-⚡ Price +${percentagePlus}% (${parseFloat(lastPrice)} - ${parseFloat(
+💸 Price +${percentagePlus}% (${parseFloat(lastPrice)} - ${parseFloat(
       lowerPrice,
     )} $)
 Signal 24h: ${signalNumber}`
@@ -150,7 +151,13 @@ Signal 24h: ${signalNumber}`
             let percentagePlus = parseFloat(
               100 - parseFloat(lowerPrice / lastPrice).toFixed(6) * 100,
             ).toFixed(2)
-
+            // console.log(
+            //   currencyPair.pair,
+            //   lastPrice,
+            //   lowerPrice,
+            //   percentagePlus,
+            //   userSettings.percentagePlus,
+            // )
             if (percentagePlus > userSettings.percentagePlus) {
               console.log(
                 `PRICE UP`,
