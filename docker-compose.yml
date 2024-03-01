@@ -3,6 +3,7 @@ services:
   cryptoscreener-mysql:
     image: mysql
     container_name: cryptoscreener-mysql
+    restart: always
     volumes:
       - database_volume:/var/lib/mysql
     environment:
