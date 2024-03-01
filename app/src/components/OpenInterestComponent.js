@@ -9,6 +9,7 @@ const {UserStatusEnum} = require('~/enum/UserStatusEnum')
 const {ExchangeStatusEnum} = require('~/enum/ExchangeStatusEnum')
 const {UserSignalModel} = require('~/components/model/UserSignalModel')
 const {UserExchangeModel} = require('~/components/model/UserExchangeModel')
+const {UserBotTypeEnum} = require('~/enum/UserBotTypeEnum')
 const date = require('date-and-time')
 
 class OpenInterestComponent {
@@ -21,7 +22,6 @@ class OpenInterestComponent {
   #userSignalModel = null
   #userExchangeModel = null
   static DATE_FORMAT = 'YYYY-MM-DD'
-  static OPEN_INTEREST_HOUR = 3
 
   constructor() {
     this.#telegram = new TelegramComponent(telegram.botToken)
@@ -58,6 +58,7 @@ Signal number: ${signalNumber}`
     let userSettingsData = await this.#userSettingsModel.getByUserIds(userIds)
     let userExchangesData = await this.#userExchangeModel.getByUserIds(
       userIds,
+      UserBotTypeEnum.openInterest,
       exchange,
     )
 

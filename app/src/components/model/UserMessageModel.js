@@ -4,14 +4,14 @@ const {unpack} = require('~/common/ModelTools')
 
 class UserMessageModel {
   static tableName = 'userMessage'
-  static fields = ['id', 'userId', 'message', 'createdAt']
+  static fields = ['id', 'userId', 'botType', 'message', 'createdAt']
 
-  save(userId, message, createdAt = new Date()) {
+  save(userId, botType, message, createdAt = new Date()) {
     return mysqlConnectionPool
       .query(
-        `INSERT INTO ${UserMessageModel.tableName} (userId, message, createdAt)
-         VALUES(?, ?, ?)`,
-        [userId, message, createdAt],
+        `INSERT INTO ${UserMessageModel.tableName} (userId, botType, message,  createdAt)
+         VALUES(?, ?, ?, ?)`,
+        [userId, botType, message, createdAt],
       )
       .then((execResult) => {
         if (!execResult || !execResult.insertId) {
@@ -21,16 +21,16 @@ class UserMessageModel {
       })
   }
 
-  getLastByUserId(userId) {
+  getLastByUserId(userId, botType) {
     return mysqlConnectionPool
       .query(
         `SELECT ${UserMessageModel.fields.join(',')} FROM ${
           UserMessageModel.tableName
         }
-         WHERE userId = ?
+         WHERE userId = ? AND botType = ?
          ORDER BY id DESC
          LIMIT 1`,
-        [userId],
+        [userId, botType],
       )
       .then((result) => {
         if (result && result.length === 0) {
@@ -41,11 +41,12 @@ class UserMessageModel {
       })
   }
 
-  deleteById(userId) {
+  deleteById(userId, botType) {
     return mysqlConnectionPool
-      .query(`DELETE FROM ${UserMessageModel.tableName} WHERE userId = ?`, [
-        userId,
-      ])
+      .query(
+        `DELETE FROM ${UserMessageModel.tableName} WHERE userId = ? AND botType = ?`,
+        [userId, botType],
+      )
       .then((execResult) => {
         return execResult.affectedRows
       })

@@ -1,8 +1,10 @@
 const {telegram} = require('~/configs/telegram')
-const {userSettings} = require(`~/configs/userSettings`)
+const {userPumpSettings} = require(`~/configs/userPumpSettings`)
 const {UserModel} = require('~/components/model/UserModel')
 const {UserExchangeModel} = require('~/components/model/UserExchangeModel')
-const {UserSettingsModel} = require('~/components/model/UserSettingsModel')
+const {
+  UserPumpSettingsModel,
+} = require('~/components/model/UserPumpSettingsModel')
 const {UserMessageModel} = require('~/components/model/UserMessageModel')
 const {TelegramComponent} = require('~/components/TelegramComponent')
 const {ExchangeEnum} = require('~/enum/ExchangeEnum')
@@ -10,28 +12,25 @@ const {ExchangeStatusEnum} = require('~/enum/ExchangeStatusEnum')
 const {UserStatusEnum} = require('~/enum/UserStatusEnum')
 const {UserBotTypeEnum} = require('~/enum/UserBotTypeEnum')
 
-const telegramComponent = new TelegramComponent(telegram.botToken)
+const telegramComponent = new TelegramComponent(telegram.botPumpToken)
 const userModel = new UserModel()
 const userExchangeModel = new UserExchangeModel()
-const userSettingsModel = new UserSettingsModel()
+const userPumpSettingsModel = new UserPumpSettingsModel()
 const userMessageModel = new UserMessageModel()
 
-class BotHandlerComponent {
+class BotPumpHandlerComponent {
   telegrafBot = null
   static binanceTurnOn = '✅ Binance'
   static binanceTurnOff = '❌ Binance'
   static bybitTurnOn = '✅ Bybit'
   static bybitTurnOff = '❌ Bybit'
-  static periodPlus = '⤴️ Period when OI grow up'
-  static periodSilence = '〰️ Silence period'
-  static percentagePlus = '⤴️ Percentage of OI ➕'
-  static percentageAfterSilence = 'Percentage of jumping after silence ➕'
+  static periodPlus = '⤴️ Period when price grow up'
+  static percentagePlus = '⤴️ Percentage of price ➕'
   static skipSignalPeriod = '‼️ Skip signal period'
+  static skipSignalCount = '‼️ Skip signal count'
   static settings = 'My Settings'
   static hintValue = 'Please enter number between 1 and 30'
-  static hintSilenceValue = 'Please enter number between 5 and 720'
   static wrongValue = 'Wrong number, should be between 1 and 30'
-  static wrongSilenceValue = 'Please enter number between 5 and 720'
   static cancel = 'Cancel'
 
   constructor() {
@@ -54,29 +53,26 @@ class BotHandlerComponent {
             {
               text:
                 binanceData?.status === ExchangeStatusEnum.enabled
-                  ? BotHandlerComponent.binanceTurnOn
-                  : BotHandlerComponent.binanceTurnOff,
+                  ? BotPumpHandlerComponent.binanceTurnOn
+                  : BotPumpHandlerComponent.binanceTurnOff,
             },
             {
               text:
                 bybitData?.status === ExchangeStatusEnum.enabled
-                  ? BotHandlerComponent.bybitTurnOn
-                  : BotHandlerComponent.bybitTurnOff,
+                  ? BotPumpHandlerComponent.bybitTurnOn
+                  : BotPumpHandlerComponent.bybitTurnOff,
             },
           ],
           [
-            {text: BotHandlerComponent.periodPlus},
-            {text: BotHandlerComponent.periodSilence},
+            {text: BotPumpHandlerComponent.periodPlus},
+            {text: BotPumpHandlerComponent.percentagePlus},
           ],
           [
-            {text: BotHandlerComponent.percentagePlus},
-            {text: BotHandlerComponent.percentageAfterSilence},
+            {text: BotPumpHandlerComponent.skipSignalPeriod},
+            {text: BotPumpHandlerComponent.skipSignalCount},
           ],
 
-          [
-            {text: BotHandlerComponent.skipSignalPeriod},
-            {text: BotHandlerComponent.settings},
-          ],
+          [{text: BotPumpHandlerComponent.settings}],
         ],
         resize_keyboard: true,
       },
@@ -86,7 +82,7 @@ class BotHandlerComponent {
   async getUserButtonWithMessage(ctx, message, userId) {
     const exchangeData = await userExchangeModel.getByUserId(
       userId,
-      UserBotTypeEnum.openInterest,
+      UserBotTypeEnum.pump,
     )
     return ctx.reply(message, this.getBotButton(exchangeData))
   }
@@ -108,33 +104,32 @@ class BotHandlerComponent {
 
       await userExchangeModel.save(
         userId,
-        UserBotTypeEnum.openInterest,
+        UserBotTypeEnum.pump,
         ExchangeEnum.binance,
         ExchangeStatusEnum.enabled,
       )
       await userExchangeModel.save(
         userId,
-        UserBotTypeEnum.openInterest,
+        UserBotTypeEnum.pump,
         ExchangeEnum.bybit,
         ExchangeStatusEnum.enabled,
       )
       const exchangeData = await userExchangeModel.getByUserId(
         userId,
-        UserBotTypeEnum.openInterest,
+        UserBotTypeEnum.pump,
       )
 
-      await userSettingsModel.save(
+      await userPumpSettingsModel.save(
         userId,
-        userSettings.periodPlus,
-        userSettings.periodSilence,
-        userSettings.percentagePlus,
-        userSettings.percentageAfterSilence,
-        userSettings.skipSignalPeriod,
+        userPumpSettings.periodPlus,
+        userPumpSettings.percentagePlus,
+        userPumpSettings.skipSignalPeriod,
+        userPumpSettings.skipSignalCount,
       )
       await userMessageModel.deleteById(userId, UserBotTypeEnum.pump)
 
       return ctx.reply(
-        'Welcome to the Crypro Screener Silence bot, choose your settings below',
+        'Welcome to the Crypro Screener Pump bot, choose your settings below',
         this.getBotButton(exchangeData),
       )
     })
@@ -157,178 +152,155 @@ class BotHandlerComponent {
         new Date(),
       )
 
-      if (message === BotHandlerComponent.settings) {
-        const userSettingsData = await userSettingsModel.getByUserId(
+      if (message === BotPumpHandlerComponent.settings) {
+        const userSettingsData = await userPumpSettingsModel.getByUserId(
           userData.id,
         )
         message = `
 Your settings:
-${BotHandlerComponent.periodPlus} ${userSettingsData?.periodPlus} 
-${BotHandlerComponent.periodSilence} ${userSettingsData?.periodSilence} 
-${BotHandlerComponent.percentagePlus} ${userSettingsData?.percentagePlus} 
-${BotHandlerComponent.percentageAfterSilence} ${userSettingsData?.percentageAfterSilence}
-${BotHandlerComponent.skipSignalPeriod} ${userSettingsData?.skipSignalPeriod}`
+${BotPumpHandlerComponent.periodPlus} ${userSettingsData?.periodPlus} 
+${BotPumpHandlerComponent.percentagePlus} ${userSettingsData?.percentagePlus} 
+${BotPumpHandlerComponent.skipSignalPeriod} ${userSettingsData?.skipSignalPeriod}`
       }
 
-      if (message === BotHandlerComponent.cancel) {
+      if (message === BotPumpHandlerComponent.cancel) {
         return this.getUserButtonWithMessage(ctx, message, userData.id)
       }
 
-      if (message === BotHandlerComponent.periodPlus) {
-        return ctx.reply(BotHandlerComponent.hintValue, {
+      if (message === BotPumpHandlerComponent.periodPlus) {
+        return ctx.reply(BotPumpHandlerComponent.hintValue, {
           reply_markup: {
-            keyboard: [[{text: BotHandlerComponent.cancel}]],
+            keyboard: [[{text: BotPumpHandlerComponent.cancel}]],
             resize_keyboard: true,
           },
         })
       }
 
-      if (message === BotHandlerComponent.periodSilence) {
-        return ctx.reply(BotHandlerComponent.hintSilenceValue, {
+      if (message === BotPumpHandlerComponent.percentagePlus) {
+        return ctx.reply(BotPumpHandlerComponent.hintValue, {
           reply_markup: {
-            keyboard: [[{text: BotHandlerComponent.cancel}]],
+            keyboard: [[{text: BotPumpHandlerComponent.cancel}]],
             resize_keyboard: true,
           },
         })
       }
 
-      if (message === BotHandlerComponent.percentagePlus) {
-        return ctx.reply(BotHandlerComponent.hintValue, {
+      if (message === BotPumpHandlerComponent.skipSignalPeriod) {
+        return ctx.reply(BotPumpHandlerComponent.hintValue, {
           reply_markup: {
-            keyboard: [[{text: BotHandlerComponent.cancel}]],
+            keyboard: [[{text: BotPumpHandlerComponent.cancel}]],
             resize_keyboard: true,
           },
         })
       }
 
-      if (message === BotHandlerComponent.percentageAfterSilence) {
-        return ctx.reply(BotHandlerComponent.hintValue, {
+      if (message === BotPumpHandlerComponent.skipSignalCount) {
+        return ctx.reply(BotPumpHandlerComponent.hintValue, {
           reply_markup: {
-            keyboard: [[{text: BotHandlerComponent.cancel}]],
+            keyboard: [[{text: BotPumpHandlerComponent.cancel}]],
             resize_keyboard: true,
           },
         })
       }
 
-      if (message === BotHandlerComponent.skipSignalPeriod) {
-        return ctx.reply(BotHandlerComponent.hintValue, {
-          reply_markup: {
-            keyboard: [[{text: BotHandlerComponent.cancel}]],
-            resize_keyboard: true,
-          },
-        })
-      }
-
-      if (previousMessage?.message === BotHandlerComponent.periodPlus) {
+      if (previousMessage?.message === BotPumpHandlerComponent.periodPlus) {
         if (parseInt(message) < 1 || parseInt(message) > 30) {
           return this.getUserButtonWithMessage(
             ctx,
-            BotHandlerComponent.wrongValue,
+            BotPumpHandlerComponent.wrongValue,
             userData.id,
           )
         } else {
-          await userSettingsModel.updateByUserId(userData.id, {
+          await userPumpSettingsModel.updateByUserId(userData.id, {
             periodPlus: message,
           })
         }
       }
 
-      if (previousMessage?.message === BotHandlerComponent.periodSilence) {
-        if (parseInt(message) < 5 || parseInt(message) > 720) {
-          return this.getUserButtonWithMessage(
-            ctx,
-            BotHandlerComponent.wrongSilenceValue,
-            userData.id,
-          )
-        } else {
-          await userSettingsModel.updateByUserId(userData.id, {
-            periodSilence: message,
-          })
-        }
-      }
-
-      if (previousMessage?.message === BotHandlerComponent.percentagePlus) {
+      if (previousMessage?.message === BotPumpHandlerComponent.percentagePlus) {
         if (parseInt(message) < 1 || parseInt(message) > 30) {
           return this.getUserButtonWithMessage(
             ctx,
-            BotHandlerComponent.wrongValue,
+            BotPumpHandlerComponent.wrongValue,
             userData.id,
           )
         } else {
-          await userSettingsModel.updateByUserId(userData.id, {
+          await userPumpSettingsModel.updateByUserId(userData.id, {
             percentagePlus: message,
           })
         }
       }
 
       if (
-        previousMessage?.message === BotHandlerComponent.percentageAfterSilence
+        previousMessage?.message === BotPumpHandlerComponent.skipSignalPeriod
       ) {
         if (parseInt(message) < 1 || parseInt(message) > 30) {
           return this.getUserButtonWithMessage(
             ctx,
-            BotHandlerComponent.wrongValue,
+            BotPumpHandlerComponent.wrongValue,
             userData.id,
           )
         } else {
-          await userSettingsModel.updateByUserId(userData.id, {
-            percentageAfterSilence: message,
-          })
-        }
-      }
-
-      if (previousMessage?.message === BotHandlerComponent.skipSignalPeriod) {
-        if (parseInt(message) < 1 || parseInt(message) > 30) {
-          return this.getUserButtonWithMessage(
-            ctx,
-            BotHandlerComponent.wrongValue,
-            userData.id,
-          )
-        } else {
-          await userSettingsModel.updateByUserId(userData.id, {
+          await userPumpSettingsModel.updateByUserId(userData.id, {
             skipSignalPeriod: message,
           })
         }
       }
 
-      if (message === BotHandlerComponent.binanceTurnOn) {
+      if (
+        previousMessage?.message === BotPumpHandlerComponent.skipSignalCount
+      ) {
+        if (parseInt(message) < 1 || parseInt(message) > 30) {
+          return this.getUserButtonWithMessage(
+            ctx,
+            BotPumpHandlerComponent.wrongValue,
+            userData.id,
+          )
+        } else {
+          await userPumpSettingsModel.updateByUserId(userData.id, {
+            skipSignalCount: message,
+          })
+        }
+      }
+
+      if (message === BotPumpHandlerComponent.binanceTurnOn) {
         message = 'Binance turn off'
         await userExchangeModel.save(
           userData.id,
-          UserBotTypeEnum.openInterest,
+          UserBotTypeEnum.pump,
           ExchangeEnum.binance,
           ExchangeStatusEnum.disabled,
         )
-      } else if (message === BotHandlerComponent.binanceTurnOff) {
+      } else if (message === BotPumpHandlerComponent.binanceTurnOff) {
         message = 'Binance turn on'
         await userExchangeModel.save(
           userData.id,
-          UserBotTypeEnum.openInterest,
+          UserBotTypeEnum.pump,
           ExchangeEnum.binance,
           ExchangeStatusEnum.enabled,
         )
       }
 
-      if (message === BotHandlerComponent.bybitTurnOn) {
+      if (message === BotPumpHandlerComponent.bybitTurnOn) {
         message = 'Bybit turn off'
         await userExchangeModel.save(
           userData.id,
-          UserBotTypeEnum.openInterest,
+          UserBotTypeEnum.pump,
           ExchangeEnum.bybit,
           ExchangeStatusEnum.disabled,
         )
-      } else if (message === BotHandlerComponent.bybitTurnOff) {
+      } else if (message === BotPumpHandlerComponent.bybitTurnOff) {
         message = 'Bybit turn on'
         await userExchangeModel.save(
           userData.id,
-          UserBotTypeEnum.openInterest,
+          UserBotTypeEnum.pump,
           ExchangeEnum.bybit,
           ExchangeStatusEnum.enabled,
         )
       }
       const exchangeData = await userExchangeModel.getByUserId(
         userData.id,
-        UserBotTypeEnum.openInterest,
+        UserBotTypeEnum.pump,
       )
       return ctx.reply(message, this.getBotButton(exchangeData))
     })
@@ -339,4 +311,4 @@ ${BotHandlerComponent.skipSignalPeriod} ${userSettingsData?.skipSignalPeriod}`
     process.once('SIGTERM', () => bot.stop('SIGTERM'))
   }
 }
-exports.BotHandlerComponent = BotHandlerComponent
+exports.BotPumpHandlerComponent = BotPumpHandlerComponent

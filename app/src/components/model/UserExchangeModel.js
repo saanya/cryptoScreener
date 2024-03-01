@@ -1,18 +1,18 @@
 const {MysqlPool} = require('~/common/MysqlPool')
 const mysqlConnectionPool = new MysqlPool()
-const {unpack, unpackMulti} = require('~/common/ModelTools')
+const {unpackMulti} = require('~/common/ModelTools')
 
 class UserExchangeModel {
   static tableName = 'userExchange'
-  static fields = ['userId', 'exchange', 'status', 'createdAt']
+  static fields = ['userId', 'botType', 'exchange', 'status', 'createdAt']
 
-  save(userId, exchange, status, createdAt = new Date()) {
+  save(userId, botType, exchange, status, createdAt = new Date()) {
     return mysqlConnectionPool
       .query(
-        `INSERT INTO ${UserExchangeModel.tableName} (userId, exchange, status, createdAt)
-         VALUES(?, ?, ?, ?)
+        `INSERT INTO ${UserExchangeModel.tableName} (userId, botType, exchange, status, createdAt)
+         VALUES(?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE status = ?`,
-        [userId, exchange, status, createdAt, status],
+        [userId, botType, exchange, status, createdAt, status],
       )
       .then((execResult) => {
         if (!execResult || !execResult.affectedRows) {
@@ -22,14 +22,14 @@ class UserExchangeModel {
       })
   }
 
-  getByUserId(userId) {
+  getByUserId(userId, botType) {
     return mysqlConnectionPool
       .query(
         `SELECT ${UserExchangeModel.fields.join(',')} FROM ${
           UserExchangeModel.tableName
         }
-         WHERE userId = ?`,
-        [userId],
+         WHERE userId = ? and botType = ?`,
+        [userId, botType],
       )
       .then((results) => {
         if (results && results.length === 0) {
@@ -40,9 +40,9 @@ class UserExchangeModel {
       })
   }
 
-  getByUserIds(userIds, exchange = null) {
-    let where = ['userId IN (?)']
-    let params = [userIds]
+  getByUserIds(userIds, botType, exchange = null) {
+    let where = ['userId IN (?)', 'botType = ?']
+    let params = [userIds, botType]
 
     if (exchange) {
       where = [...where, 'exchange = ?']
