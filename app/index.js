@@ -1,8 +1,14 @@
 require('module-alias/register')
 require('dotenv').config()
 const {BotHandlerComponent} = require('~/components/BotHandlerComponent')
+const {
+  BotPumpHandlerComponent,
+} = require('~/components/BotPumpHandlerComponent')
+
 const botHandlerComponent = new BotHandlerComponent()
+const botPumpHandlerComponent = new BotPumpHandlerComponent()
 botHandlerComponent.startListeners()
+botPumpHandlerComponent.startListeners()
 
 // const http = require('node:http')
 //const {BinanceComponent} = require('~/components/BinanceComponent')
