@@ -59,7 +59,7 @@ class PumpComponent {
 💸 Price +${percentagePlus}% (${parseFloat(lastPrice)} - ${parseFloat(
       lowerPrice,
     )} $)
-Signal 24h: ${signalNumber}`
+🔊 Signal 24h: ${signalNumber}`
   }
 
   async processPump(exchange) {
