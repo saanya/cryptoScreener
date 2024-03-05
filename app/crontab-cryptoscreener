@@ -14,8 +14,8 @@ BASH_ENV=/var/www/.env.sh
 1 0 1 * * bash -l -c "node ./src/tools/addPartitionTable.js pairPrice" > /var/log/crontab-cryptoscreener.log 2>&1 
 # 1 per minutes
 */1 * * * * bash -l -c "npm run startBinanceCronjobLogics" > /var/log/crontab-cryptoscreener.log 2>&1
-*/1 * * * * bash -l -c "sleep 20; npm run startBinanceCronjobLogics" > /var/log/crontab-cryptoscreener.log 2>&1
 */1 * * * * bash -l -c "sleep 40; npm run startBinanceCronjobLogics" > /var/log/crontab-cryptoscreener.log 2>&1
+#*/1 * * * * bash -l -c "sleep 40; npm run startBinanceCronjobLogics" > /var/log/crontab-cryptoscreener.log 2>&1
 # */1 * * * * bash -l -c "node ./src/tools/binance/openInterest.js" > /var/log/crontab-cryptoscreener.log 2>&1 
 # */1 * * * * bash -l -c "node ./src/tools/binance/pairPrice.js" > /var/log/crontab-cryptoscreener.log 2>&1 
 # */1 * * * * bash -l -c "node ./src/tools/binance/scheduler.js" > /var/log/crontab-cryptoscreener.log 2>&1 
